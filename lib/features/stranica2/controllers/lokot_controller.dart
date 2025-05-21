@@ -1,0 +1,1 @@
+// Funkcionalnost lokota dolazi ovdje.

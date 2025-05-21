@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'ulaz_screen.dart';
 import '../models/profil.dart';
 import '../controllers/profil_controller.dart';
 import '../widgets/ime_input_widget.dart';
@@ -8,6 +7,7 @@ import '../widgets/spremi_dugme_widget.dart';
 import '../widgets/profil_list_tile_widget.dart';
 import '../widgets/ulaz_dugme_widget.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -81,8 +81,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          UlazScreen(imeProfila: aktivni!.ime),
+                      builder: (context) => const Stranica2Screen(),
                     ),
                   );
                 },
