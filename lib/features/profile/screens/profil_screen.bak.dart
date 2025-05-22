@@ -8,7 +8,6 @@ import '../widgets/profil_list_tile_widget.dart';
 import '../widgets/ulaz_dugme_widget.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
-import '../services/aktivni_profil_service.dart';
 
 class ProfilScreen extends StatefulWidget {
   const ProfilScreen({super.key});
@@ -79,7 +78,6 @@ class _ProfilScreenState extends State<ProfilScreen> {
               UlazDugmeWidget(
                 ime: aktivni!.ime,
                 onPressed: () {
-                  AktivniProfilService.postavi(aktivni!);
                   Navigator.push(
                     context,
                     MaterialPageRoute(

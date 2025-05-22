@@ -1,0 +1,950 @@
+﻿=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/maindart ===
+import 'package:flutter/material.dart';
+import 'features/profile/screens/profil_screen.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      title: 'Spremanje profila',
+      debugShowCheckedModeBanner: false,
+      home: ProfilScreen(),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/controllers/profil_controllerdart ===
+import '../models/profil.dart';
+import '../services/profil_storage_service.dart';
+
+class ProfilController {
+  final _service = ProfilStorageService();
+  List<Profil> profili = [];
+
+  Future<void> ucitaj() async {
+    profili = await _service.ucitaj();
+  }
+
+  Future<void> dodajProfil(String ime, String mapa) async {
+    final novi = Profil(ime: ime, mapa: mapa);
+    profili.add(novi);
+    await _service.spremi(profili);
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/models/profildart ===
+class Profil {
+  final String ime;
+  final String mapa;
+
+  Profil({required this.ime, required this.mapa});
+
+  Map<String, dynamic> toJson() => {
+        'ime': ime,
+        'mapa': mapa,
+      };
+
+  static Profil fromJson(Map<String, dynamic> json) {
+    return Profil(
+      ime: json['ime'],
+      mapa: json['mapa'],
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/screens/profil_screenbakdart ===
+import 'package:flutter/material.dart';
+import '../models/profil.dart';
+import '../controllers/profil_controller.dart';
+import '../widgets/ime_input_widget.dart';
+import '../widgets/odaberi_mapu_dugme_widget.dart';
+import '../widgets/spremi_dugme_widget.dart';
+import '../widgets/profil_list_tile_widget.dart';
+import '../widgets/ulaz_dugme_widget.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
+
+class ProfilScreen extends StatefulWidget {
+  const ProfilScreen({super.key});
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  final ProfilController controller = ProfilController();
+  final TextEditingController imeController = TextEditingController();
+  String? odabranaMapa;
+  Profil? aktivni;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.ucitaj().then((_) {
+      setState(() {});
+    });
+  }
+
+  Future<void> odaberiMapu() async {
+    final path = await getDirectoryPath();
+    if (path != null) setState(() => odabranaMapa = path);
+  }
+
+  Future<void> spremiProfil() async {
+    final ime = imeController.text.trim();
+    if (ime.isEmpty || odabranaMapa == null) return;
+    await controller.dodajProfil(ime, odabranaMapa!);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Spremanje profila')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text('Unos profila', style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 10),
+            ImeInputWidget(controller: imeController),
+            const SizedBox(height: 8),
+            OdaberiMapuDugmeWidget(onPressed: odaberiMapu),
+            if (odabranaMapa != null)
+              Text(odabranaMapa!, style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 8),
+            SpremiDugmeWidget(onPressed: spremiProfil),
+            const Divider(height: 32),
+            const Text('Spremljeni profili', style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: controller.profili.length,
+                itemBuilder: (context, index) {
+                  final p = controller.profili[index];
+                  return ProfilListTileWidget(
+                    profil: p,
+                    onActivate: () => setState(() => aktivni = p),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (aktivni != null)
+              UlazDugmeWidget(
+                ime: aktivni!.ime,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Stranica2Screen(),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/screens/profil_screendart ===
+import 'package:flutter/material.dart';
+import '../models/profil.dart';
+import '../controllers/profil_controller.dart';
+import '../widgets/ime_input_widget.dart';
+import '../widgets/odaberi_mapu_dugme_widget.dart';
+import '../widgets/spremi_dugme_widget.dart';
+import '../widgets/profil_list_tile_widget.dart';
+import '../widgets/ulaz_dugme_widget.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
+import '../services/aktivni_profil_service.dart';
+
+class ProfilScreen extends StatefulWidget {
+  const ProfilScreen({super.key});
+  @override
+  State<ProfilScreen> createState() => _ProfilScreenState();
+}
+
+class _ProfilScreenState extends State<ProfilScreen> {
+  final ProfilController controller = ProfilController();
+  final TextEditingController imeController = TextEditingController();
+  String? odabranaMapa;
+  Profil? aktivni;
+
+  @override
+  void initState() {
+    super.initState();
+    controller.ucitaj().then((_) {
+      setState(() {});
+    });
+  }
+
+  Future<void> odaberiMapu() async {
+    final path = await getDirectoryPath();
+    if (path != null) setState(() => odabranaMapa = path);
+  }
+
+  Future<void> spremiProfil() async {
+    final ime = imeController.text.trim();
+    if (ime.isEmpty || odabranaMapa == null) return;
+    await controller.dodajProfil(ime, odabranaMapa!);
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Spremanje profila')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const Text('Unos profila', style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 10),
+            ImeInputWidget(controller: imeController),
+            const SizedBox(height: 8),
+            OdaberiMapuDugmeWidget(onPressed: odaberiMapu),
+            if (odabranaMapa != null)
+              Text(odabranaMapa!, style: const TextStyle(fontSize: 12)),
+            const SizedBox(height: 8),
+            SpremiDugmeWidget(onPressed: spremiProfil),
+            const Divider(height: 32),
+            const Text('Spremljeni profili', style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: controller.profili.length,
+                itemBuilder: (context, index) {
+                  final p = controller.profili[index];
+                  return ProfilListTileWidget(
+                    profil: p,
+                    onActivate: () => setState(() => aktivni = p),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 10),
+            if (aktivni != null)
+              UlazDugmeWidget(
+                ime: aktivni!.ime,
+                onPressed: () {
+                  AktivniProfilService.postavi(aktivni!);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const Stranica2Screen(),
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/screens/ulaz_screendart ===
+import 'package:flutter/material.dart';
+
+class UlazScreen extends StatelessWidget {
+  final String imeProfila;
+
+  const UlazScreen({super.key, required this.imeProfila});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('ULAZ')),
+      body: Center(
+        child: Text('Ušli ste u profil: ',
+            style: const TextStyle(fontSize: 24)),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/services/aktivni_profil_servicedart ===
+import '../models/profil.dart';
+
+class AktivniProfilService {
+  static Profil? _aktivni;
+
+  static void postavi(Profil profil) {
+    _aktivni = profil;
+  }
+
+  static Profil? dohvati() {
+    return _aktivni;
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/services/profil_storage_servicedart ===
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/profil.dart';
+
+class ProfilStorageService {
+  static const _key = 'profili_json';
+
+  Future<void> spremi(List<Profil> profili) async {
+    final prefs = await SharedPreferences.getInstance();
+    final json = jsonEncode(profili.map((e) => e.toJson()).toList());
+    await prefs.setString(_key, json);
+  }
+
+  Future<List<Profil>> ucitaj() async {
+    final prefs = await SharedPreferences.getInstance();
+    final tekst = prefs.getString(_key);
+    if (tekst == null) return [];
+    final decoded = jsonDecode(tekst) as List;
+    return decoded.map((e) => Profil.fromJson(e)).toList();
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/widgets/ime_input_widgetdart ===
+import 'package:flutter/material.dart';
+
+class ImeInputWidget extends StatelessWidget {
+  final TextEditingController controller;
+
+  const ImeInputWidget({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      decoration: const InputDecoration(labelText: 'Ime profila'),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/widgets/odaberi_mapu_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class OdaberiMapuDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const OdaberiMapuDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: const Text('Odaberi mapu'),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/widgets/profil_list_tile_widgetdart ===
+import 'package:flutter/material.dart';
+import '../models/profil.dart';
+
+class ProfilListTileWidget extends StatelessWidget {
+  final Profil profil;
+  final VoidCallback onActivate;
+
+  const ProfilListTileWidget({
+    super.key,
+    required this.profil,
+    required this.onActivate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(profil.ime),
+      subtitle: Text(profil.mapa, style: const TextStyle(fontSize: 12)),
+      trailing: ElevatedButton(
+        onPressed: onActivate,
+        child: const Text('Aktiviraj'),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/widgets/spremi_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class SpremiDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const SpremiDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: const Text('Spremi profil'),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/profile/widgets/ulaz_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class UlazDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String ime;
+
+  const UlazDugmeWidget({
+    super.key,
+    required this.onPressed,
+    required this.ime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text('ULAZ za: ', style: const TextStyle(fontSize: 16)),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screenbakdart ===
+import 'package:flutter/material.dart';
+
+class SearchScreen extends StatelessWidget {
+  const SearchScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pretraživanje'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: const Padding(
+        padding: EdgeInsets.all(16),
+        child: TextField(
+          decoration: InputDecoration(
+            labelText: 'Traži pjesmu',
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ),
+    );
+  }
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screenbak2dart ===
+import 'package:flutter/material.dart';
+import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
+
+class SearchScreen extends StatelessWidget {
+  const SearchScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final aktivni = AktivniProfilService.dohvati();
+    final mapa = aktivni?.mapa ?? 'nema mape';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pretraživanje'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Traži pjesmu',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text("Mapa: "),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screendart ===
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
+
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  List<String> allSongs = [];
+  List<String> filteredSongs = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSongs();
+  }
+
+  void _loadSongs() {
+    final profil = AktivniProfilService.dohvati();
+    final folderPath = profil?.mapa;
+    if (folderPath == null) return;
+
+    final folder = Directory(folderPath);
+    if (!folder.existsSync()) return;
+
+    final txtFiles = folder
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.toLowerCase().endsWith('.txt'))
+        .map((f) => f.uri.pathSegments.last)
+        .toList();
+
+    setState(() {
+      allSongs = txtFiles;
+      filteredSongs = txtFiles;
+    });
+  }
+
+  void _filterSongs(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredSongs = allSongs
+          .where((song) => song.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pretraživanje'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              onChanged: _filterSongs,
+              decoration: const InputDecoration(
+                labelText: 'Traži pjesmu',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filteredSongs.length,
+                itemBuilder: (context, index) {
+                  final song = filteredSongs[index];
+                  return ListTile(
+                    title: Text(song),
+                    onTap: () {
+                      // kasnije se može povezati s otvaranjem teksta
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/edit_controllerdart ===
+// Funkcionalnost za uređivanje tekstova dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/inout_controllerdart ===
+// Funkcionalnost IN/OUT logike dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/lokot_controllerdart ===
+// Funkcionalnost lokota dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/navigation_controllerdart ===
+import 'package:flutter/material.dart';
+
+class NavigationController {
+  static void vratiNazad(BuildContext context) {
+    Navigator.pop(context);
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/opcije_controllerdart ===
+// Funkcionalnost za točkić/opcije dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/search_controllerdart ===
+import 'package:flutter/material.dart';
+import 'package:spremanje_modular/features/search/screens/search_screen.dart';
+
+class SearchController {
+  static void otvoriPretragu(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SearchScreen()),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/spajalica_controllerdart ===
+// Funkcionalnost za prateće fajlove dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/transpozicija_controllerdart ===
+// Funkcionalnost transponiranja će biti dodana ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/controllers/zoom_controllerdart ===
+// Funkcionalnost zoomiranja dolazi ovdje.
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/screens/stranica2_screendart ===
+import 'package:flutter/material.dart';
+import '../widgets/back_strelica_widget.dart';
+import '../widgets/lupa_dugme_widget.dart';
+import '../widgets/transpozicija_dugmad_widget.dart';
+import '../widgets/lokot_dugme_widget.dart';
+import '../widgets/inout_dugme_widget.dart';
+import '../widgets/zoom_lupe_widget.dart';
+import '../widgets/spajalica_dugme_widget.dart';
+import '../widgets/edit_dugme_widget.dart';
+import '../widgets/opcije_dugme_widget.dart';
+import '../controllers/navigation_controller.dart';
+import '../controllers/search_controller.dart' as moj_search;
+
+class Stranica2Screen extends StatelessWidget {
+  const Stranica2Screen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            BackStrelicaWidget(
+              onPressed: () => NavigationController.vratiNazad(context),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TranspozicijaDugmadWidget(
+                    onPlus: () {},
+                    onMinus: () {},
+                  ),
+                  const SizedBox(width: 8),
+                  LokotDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  InOutDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  ZoomLupeWidget(
+                    onZoomIn: () {},
+                    onZoomOut: () {},
+                  ),
+                  const SizedBox(width: 8),
+                  SpajalicaDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  EditDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  OpcijeDugmeWidget(onPressed: () {}),
+                ],
+              ),
+            ),
+            LupaDugmeWidget(
+              onPressed: () => moj_search.SearchController.otvoriPretragu(context),
+            ),
+          ],
+        ),
+      ),
+      body: Container(),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/back_strelica_widgetdart ===
+import 'package:flutter/material.dart';
+
+class BackStrelicaWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const BackStrelicaWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.arrow_back),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/edit_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class EditDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const EditDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.edit),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/inout_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class InOutDugmeWidget extends StatefulWidget {
+  final VoidCallback? onPressed;
+
+  const InOutDugmeWidget({super.key, this.onPressed});
+
+  @override
+  State<InOutDugmeWidget> createState() => _InOutDugmeWidgetState();
+}
+
+class _InOutDugmeWidgetState extends State<InOutDugmeWidget> {
+  bool jeOut = true;
+
+  void _toggle() {
+    setState(() {
+      jeOut = !jeOut;
+    });
+    if (widget.onPressed != null) widget.onPressed!();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: _toggle,
+      child: Text(jeOut ? 'OUT' : 'IN'),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/lokot_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class LokotDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const LokotDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.lock),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/lupa_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class LupaDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const LupaDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.search),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/opcije_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class OpcijeDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const OpcijeDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.settings),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/spajalica_dugme_widgetdart ===
+import 'package:flutter/material.dart';
+
+class SpajalicaDugmeWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const SpajalicaDugmeWidget({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.attach_file),
+      onPressed: onPressed,
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/transpozicija_dugmad_widgetdart ===
+import 'package:flutter/material.dart';
+
+class TranspozicijaDugmadWidget extends StatelessWidget {
+  final VoidCallback onPlus;
+  final VoidCallback onMinus;
+
+  const TranspozicijaDugmadWidget({
+    super.key,
+    required this.onPlus,
+    required this.onMinus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.remove),
+          onPressed: onMinus,
+        ),
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: onPlus,
+        ),
+      ],
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/widgets/zoom_lupe_widgetdart ===
+import 'package:flutter/material.dart';
+
+class ZoomLupeWidget extends StatelessWidget {
+  final VoidCallback onZoomIn;
+  final VoidCallback onZoomOut;
+
+  const ZoomLupeWidget({
+    super.key,
+    required this.onZoomIn,
+    required this.onZoomOut,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.zoom_out),
+          onPressed: onZoomOut,
+        ),
+        IconButton(
+          icon: const Icon(Icons.zoom_in),
+          onPressed: onZoomIn,
+        ),
+      ],
+    );
+  }
+}
+
+
+
