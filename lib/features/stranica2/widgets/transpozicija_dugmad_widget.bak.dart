@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../controllers/transpozicija_controller.dart';
 
 class TranspozicijaDugmadWidget extends StatelessWidget {
   final VoidCallback onPlus;
@@ -17,17 +16,11 @@ class TranspozicijaDugmadWidget extends StatelessWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.remove),
-          onPressed: () {
-            TranspozicijaController.umanjiKorak();
-            onMinus();
-          },
+          onPressed: onMinus,
         ),
         IconButton(
           icon: const Icon(Icons.add),
-          onPressed: () {
-            TranspozicijaController.uvecajKorak();
-            onPlus();
-          },
+          onPressed: onPlus,
         ),
       ],
     );

@@ -1,1 +1,52 @@
-// Funkcionalnost transponiranja æe biti dodana ovdje.
+class TranspozicijaController {
+  static int _korak = 0;
+
+  static void uvecajKorak() {
+    _korak++;
+  }
+
+  static void umanjiKorak() {
+    _korak--;
+  }
+
+  static String transponirajTekst(String tekst) {
+    final linije = tekst.split('\n');
+    final noveLinije = linije.map((red) => _transponirajRed(red)).toList();
+    return noveLinije.join('\n');
+  }
+
+  static String _transponirajRed(String red) {
+    final regex = RegExp(r'\(([A-Ha-h][#b]?[^\)]*)\)');
+    return red.replaceAllMapped(regex, (match) {
+      final sadrzaj = match.group(1)!;
+      final transponirano = _transponirajAkord(sadrzaj);
+      return '($transponirano)';
+    });
+  }
+
+  static String _transponirajAkord(String akord) {
+    final note = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'H'];
+
+    // više akorda odvojenih separatorima
+    final regex = RegExp(r'([A-Ha-h][#b]?)');
+    final dijelovi = regex.allMatches(akord).map((m) => m.group(0)!).toList();
+    if (dijelovi.isEmpty) return akord;
+
+    String rezultat = akord;
+
+    for (final originalAkord in dijelovi) {
+      for (final n in note) {
+        if (originalAkord.toUpperCase().startsWith(n)) {
+          final index = note.indexOf(n);
+          final noviIndex = (index + _korak) % 12;
+          final novaNota = note[noviIndex < 0 ? noviIndex + 12 : noviIndex];
+          final zamjena = novaNota + originalAkord.substring(n.length);
+          rezultat = rezultat.replaceFirst(originalAkord, zamjena);
+          break;
+        }
+      }
+    }
+
+    return rezultat;
+  }
+}

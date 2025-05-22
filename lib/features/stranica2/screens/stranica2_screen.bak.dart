@@ -12,7 +12,6 @@ import '../widgets/spremi_dugme_widget.dart';
 import '../widgets/opcije_dugme_widget.dart';
 import '../controllers/navigation_controller.dart';
 import '../controllers/search_controller.dart' as moj_search;
-import '../controllers/transpozicija_controller.dart';
 import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
 
 class Stranica2Screen extends StatefulWidget {
@@ -26,7 +25,6 @@ class Stranica2Screen extends StatefulWidget {
 class _Stranica2ScreenState extends State<Stranica2Screen> {
   bool editMod = false;
   TextEditingController textController = TextEditingController();
-  String ucitaniTekstOriginal = '';
   String ucitaniTekst = '';
 
   @override
@@ -43,9 +41,8 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
     if (await file.exists()) {
       final text = await file.readAsString();
       setState(() {
-        ucitaniTekstOriginal = text;
-        ucitaniTekst = TranspozicijaController.transponirajTekst(text);
-        textController.text = ucitaniTekst;
+        ucitaniTekst = text;
+        textController.text = text;
       });
     }
   }
@@ -57,8 +54,7 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
     final file = File(path);
     await file.writeAsString(textController.text);
     setState(() {
-      ucitaniTekstOriginal = textController.text;
-      ucitaniTekst = TranspozicijaController.transponirajTekst(textController.text);
+      ucitaniTekst = textController.text;
       editMod = false;
     });
   }
@@ -70,13 +66,6 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
       } else {
         editMod = true;
       }
-    });
-  }
-
-  void _azurirajTransponiranje() {
-    setState(() {
-      ucitaniTekst = TranspozicijaController.transponirajTekst(ucitaniTekstOriginal);
-      textController.text = ucitaniTekst;
     });
   }
 
@@ -94,10 +83,7 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TranspozicijaDugmadWidget(
-                    onPlus: _azurirajTransponiranje,
-                    onMinus: _azurirajTransponiranje,
-                  ),
+                  TranspozicijaDugmadWidget(onPlus: () {}, onMinus: () {}),
                   const SizedBox(width: 8),
                   LokotDugmeWidget(onPressed: () {}),
                   const SizedBox(width: 8),
@@ -107,9 +93,7 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
                   const SizedBox(width: 8),
                   SpajalicaDugmeWidget(onPressed: () {}),
                   const SizedBox(width: 8),
-                  editMod
-                      ? SpremiDugmeWidget(onPressed: _spremiTekst)
-                      : EditDugmeWidget(onPressed: _toggleEdit),
+                  editMod ? SpremiDugmeWidget(onPressed: _spremiTekst) : EditDugmeWidget(onPressed: _toggleEdit),
                   const SizedBox(width: 8),
                   OpcijeDugmeWidget(onPressed: () {}),
                 ],
@@ -147,3 +131,5 @@ class _Stranica2ScreenState extends State<Stranica2Screen> {
     );
   }
 }
+
+
