@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/back_strelica_widget.dart';
 import '../widgets/lupa_dugme_widget.dart';
 import '../widgets/transpozicija_dugmad_widget.dart';
@@ -14,6 +15,7 @@ import '../controllers/search_controller.dart' as moj_search;
 
 class Stranica2Screen extends StatelessWidget {
   final String imeFajla;
+
   const Stranica2Screen({super.key, required this.imeFajla});
 
   @override

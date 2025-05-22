@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
-import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -24,21 +23,44 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Future<void> _loadSongs() async {
     final permission = await Permission.manageExternalStorage.request();
-    if (!permission.isGranted) return;
+    if (!permission.isGranted) {
+      debugPrint(" STORAGE dozvola NIJE odobrena.");
+      return;
+    }
 
     final profil = AktivniProfilService.dohvati();
     final folderPath = profil?.mapa;
-    if (folderPath == null) return;
+    if (folderPath == null) {
+      debugPrint(" Nema postavljene mape u profilu");
+      return;
+    }
 
-    final folder = Directory(folderPath);
-    if (!folder.existsSync()) return;
+    final cleaned = folderPath
+        .replaceAll('file:///', '')
+        .replaceAll('file://', '')
+        .replaceAll('/', Platform.pathSeparator)
+        .replaceAll('\\', Platform.pathSeparator);
 
-    final txtFiles = folder
-        .listSync()
+    debugPrint(" Provjeravam folder: " + cleaned);
+
+    final folder = Directory(cleaned);
+    if (!folder.existsSync()) {
+      debugPrint(" Folder NE postoji!");
+      return;
+    }
+
+    final files = folder.listSync();
+    for (var file in files) {
+      debugPrint(" Fajl u mapi: " + file.path);
+    }
+
+    final txtFiles = files
         .whereType<File>()
         .where((f) => f.path.toLowerCase().endsWith('.txt'))
         .map((f) => f.uri.pathSegments.last)
         .toList();
+
+    debugPrint(" Pronaðeni .txt fajlovi: " + txtFiles.toString());
 
     setState(() {
       allSongs = txtFiles;
@@ -58,9 +80,18 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final profil = AktivniProfilService.dohvati();
+    debugPrint(" PROFIL: " + (profil?.ime ?? 'null') + " | MAPA: " + (profil?.mapa ?? 'null'));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pretraživanje')),
+      appBar: AppBar(
+        title: const Text('Pretraživanje'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () {},
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -80,14 +111,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   final song = filteredSongs[index];
                   return ListTile(
                     title: Text(song),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => Stranica2Screen(imeFajla: song),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   );
                 },
               ),

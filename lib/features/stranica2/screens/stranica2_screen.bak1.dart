@@ -8,13 +8,11 @@ import '../widgets/zoom_lupe_widget.dart';
 import '../widgets/spajalica_dugme_widget.dart';
 import '../widgets/edit_dugme_widget.dart';
 import '../widgets/opcije_dugme_widget.dart';
-import '../widgets/tekst_prikaz_widget.dart';
 import '../controllers/navigation_controller.dart';
 import '../controllers/search_controller.dart' as moj_search;
 
 class Stranica2Screen extends StatelessWidget {
-  final String imeFajla;
-  const Stranica2Screen({super.key, required this.imeFajla});
+  const Stranica2Screen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -30,13 +28,19 @@ class Stranica2Screen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TranspozicijaDugmadWidget(onPlus: () {}, onMinus: () {}),
+                  TranspozicijaDugmadWidget(
+                    onPlus: () {},
+                    onMinus: () {},
+                  ),
                   const SizedBox(width: 8),
                   LokotDugmeWidget(onPressed: () {}),
                   const SizedBox(width: 8),
                   InOutDugmeWidget(onPressed: () {}),
                   const SizedBox(width: 8),
-                  ZoomLupeWidget(onZoomIn: () {}, onZoomOut: () {}),
+                  ZoomLupeWidget(
+                    onZoomIn: () {},
+                    onZoomOut: () {},
+                  ),
                   const SizedBox(width: 8),
                   SpajalicaDugmeWidget(onPressed: () {}),
                   const SizedBox(width: 8),
@@ -52,11 +56,7 @@ class Stranica2Screen extends StatelessWidget {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          TekstPrikazWidget(imeFajla: imeFajla),
-        ],
-      ),
+      body: Container(),
     );
   }
 }

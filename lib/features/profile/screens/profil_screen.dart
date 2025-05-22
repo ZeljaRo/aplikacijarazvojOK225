@@ -83,7 +83,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Stranica2Screen(),
+                      builder: (context) => const Stranica2Screen(imeFajla: 'demo.txt'),
                     ),
                   );
                 },
@@ -94,3 +94,4 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 }
+
