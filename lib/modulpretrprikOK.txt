@@ -247,7 +247,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const Stranica2Screen(),
+                      builder: (context) => const Stranica2Screen(imeFajla: 'demo.txt'),
                     ),
                   );
                 },
@@ -258,6 +258,7 @@ class _ProfilScreenState extends State<ProfilScreen> {
     );
   }
 }
+
 
 
 
@@ -766,7 +767,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
 
 
-=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screendart ===
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screenbak_navdart ===
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
@@ -804,6 +805,110 @@ class SearchScreen extends StatelessWidget {
             },
           );
         },
+      ),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/search/screens/search_screendart ===
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:spremanje_modular/features/profile/services/aktivni_profil_service.dart';
+import 'package:spremanje_modular/features/stranica2/screens/stranica2_screen.dart';
+
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  List<String> allSongs = [];
+  List<String> filteredSongs = [];
+  String searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSongs();
+  }
+
+  Future<void> _loadSongs() async {
+    final permission = await Permission.manageExternalStorage.request();
+    if (!permission.isGranted) return;
+
+    final profil = AktivniProfilService.dohvati();
+    final folderPath = profil?.mapa;
+    if (folderPath == null) return;
+
+    final folder = Directory(folderPath);
+    if (!folder.existsSync()) return;
+
+    final txtFiles = folder
+        .listSync()
+        .whereType<File>()
+        .where((f) => f.path.toLowerCase().endsWith('.txt'))
+        .map((f) => f.uri.pathSegments.last)
+        .toList();
+
+    setState(() {
+      allSongs = txtFiles;
+      filteredSongs = txtFiles;
+    });
+  }
+
+  void _filterSongs(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredSongs = allSongs
+          .where((song) => song.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profil = AktivniProfilService.dohvati();
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pretraživanje')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              onChanged: _filterSongs,
+              decoration: const InputDecoration(
+                labelText: 'Traži pjesmu',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.builder(
+                itemCount: filteredSongs.length,
+                itemBuilder: (context, index) {
+                  final song = filteredSongs[index];
+                  return ListTile(
+                    title: Text(song),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => Stranica2Screen(imeFajla: song),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1017,7 +1122,7 @@ class Stranica2Screen extends StatelessWidget {
 
 
 
-=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/screens/stranica2_screendart ===
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/screens/stranica2_screenbak_navdart ===
 import 'package:flutter/material.dart';
 import '../widgets/back_strelica_widget.dart';
 import '../widgets/lupa_dugme_widget.dart';
@@ -1077,6 +1182,72 @@ class Stranica2Screen extends StatelessWidget {
         ),
       ),
       body: Container(),
+    );
+  }
+}
+
+
+
+=== C:/Users/Korisnik/Documents/projekti/spremanje_modular/lib/features/stranica2/screens/stranica2_screendart ===
+import 'package:flutter/material.dart';
+import '../widgets/back_strelica_widget.dart';
+import '../widgets/lupa_dugme_widget.dart';
+import '../widgets/transpozicija_dugmad_widget.dart';
+import '../widgets/lokot_dugme_widget.dart';
+import '../widgets/inout_dugme_widget.dart';
+import '../widgets/zoom_lupe_widget.dart';
+import '../widgets/spajalica_dugme_widget.dart';
+import '../widgets/edit_dugme_widget.dart';
+import '../widgets/opcije_dugme_widget.dart';
+import '../widgets/tekst_prikaz_widget.dart';
+import '../controllers/navigation_controller.dart';
+import '../controllers/search_controller.dart' as moj_search;
+
+class Stranica2Screen extends StatelessWidget {
+  final String imeFajla;
+  const Stranica2Screen({super.key, required this.imeFajla});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            BackStrelicaWidget(
+              onPressed: () => NavigationController.vratiNazad(context),
+            ),
+            Expanded(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TranspozicijaDugmadWidget(onPlus: () {}, onMinus: () {}),
+                  const SizedBox(width: 8),
+                  LokotDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  InOutDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  ZoomLupeWidget(onZoomIn: () {}, onZoomOut: () {}),
+                  const SizedBox(width: 8),
+                  SpajalicaDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  EditDugmeWidget(onPressed: () {}),
+                  const SizedBox(width: 8),
+                  OpcijeDugmeWidget(onPressed: () {}),
+                ],
+              ),
+            ),
+            LupaDugmeWidget(
+              onPressed: () => moj_search.SearchController.otvoriPretragu(context),
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          TekstPrikazWidget(imeFajla: imeFajla),
+        ],
+      ),
     );
   }
 }
@@ -1246,7 +1417,7 @@ class TekstPrikazWidget extends StatelessWidget {
       return const Center(child: Text('Nema aktivnog profila'));
     }
 
-    final path = "\/\";
+    final path = profil.mapa + '/' + imeFajla;
     final file = File(path);
 
     return FutureBuilder<String>(
@@ -1256,7 +1427,7 @@ class TekstPrikazWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          return Center(child: Text('Greška pri učitavanju: \'));
+          return const Center(child: Text('Greska pri ucitavanju'));
         }
 
         return Expanded(
